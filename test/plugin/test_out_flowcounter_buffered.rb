@@ -190,117 +190,117 @@ count_keys message
     assert_equal 80.00, r4['t2_bytes_rate']
   end
 
-  def test_emit
-    d1 = create_driver(CONFIG, 'test.tag1')
-    time = Time.parse("2012-01-02 13:14:15").to_i
-    d1.run do
-      3600.times do
-        d1.emit({'message'=> 'a' * 100})
-        d1.emit({'message'=> 'b' * 100})
-        d1.emit({'message'=> 'c' * 100})
-      end
-    end
-    r1 = d1.instance.flush(3600 * 24)
-    assert_equal 3600*3, r1['tag1_count']
-    assert_equal 3600*3*100, r1['tag1_bytes']
-    assert_equal (300/24.0).floor / 100.0, r1['tag1_count_rate'] # 3 * 3600 / (60 * 60 * 24) as xx.xx
-    assert_equal (30000/24.0).floor / 100.0, r1['tag1_bytes_rate'] # 300 * 3600 / (60 * 60 * 24) xx.xx
-
-    d3 = create_driver( %[
-      unit minute
-      aggregate all
-      tag flow
-      count_keys f1,f2,f3
-    ], 'test.tag1')
-    time = Time.parse("2012-01-02 13:14:15").to_i
-    d3.run do
-      60.times do
-        d3.emit({'f1'=>'1'*10, 'f2'=>'2'*20, 'f3'=>'3'*10})
-      end
-    end
-    r3 = d3.instance.flush(60)
-    assert_equal 60, r3['count']
-    assert_equal 60*40, r3['bytes']
-    assert_equal 1.0, r3['count_rate']
-    assert_equal 40.0, r3['bytes_rate']
-  end
-
-  def test_emit2
-    d2 = create_driver( %[
-      unit minute
-      aggregate all
-      tag  flowcount
-      input_tag_remove_prefix test
-      count_keys f1,f2,f3
-    ], 'test.tag2')
-    time = Time.now.to_i
-    d2.run do
-      60.times do 
-        d2.emit({'f1' => 'abcde', 'f2' => 'vwxyz', 'f3' => '0123456789'})
-        d2.emit({'f1' => 'abcde', 'f2' => 'vwxyz', 'f3' => '0123456789'})
-        d2.emit({'f1' => 'abcde', 'f2' => 'vwxyz', 'f3' => '0123456789'})
-        d2.emit({'f1' => 'abcde', 'f2' => 'vwxyz', 'f3' => '0123456789'})
-        d2.emit({'f1' => 'abcde', 'f2' => 'vwxyz', 'f3' => '0123456789'})
-      end
-    end
-    d2.instance.flush_emit(60)
-    emits = d2.emits
-    assert_equal 1, emits.length
-    data = emits[0]
-    assert_equal 'flowcount', data[0] # tag
-    assert_equal 60*5, data[2]['count']
-    assert_equal 60*5*20, data[2]['bytes']
-  end
-
-  def test_emit3
-    d3 = create_driver( %[
-      unit minute
-      aggregate all
-      tag  flowcount
-      input_tag_remove_prefix test
-      count_keys *
-    ], 'test.tag3')
-    time = Time.now.to_i
-    d3.run do
-      60.times do 
-        d3.emit({'f1' => 'abcde', 'f2' => 'vwxyz', 'f3' => '0123456789'})
-        d3.emit({'f1' => 'abcde', 'f2' => 'vwxyz', 'f3' => '0123456789'})
-        d3.emit({'f1' => 'abcde', 'f2' => 'vwxyz', 'f3' => '0123456789'})
-        d3.emit({'f1' => 'abcde', 'f2' => 'vwxyz', 'f3' => '0123456789'})
-        d3.emit({'f1' => 'abcde', 'f2' => 'vwxyz', 'f3' => '0123456789'})
-      end
-    end
-    d3.instance.flush_emit(60)
-    emits = d3.emits
-    assert_equal 1, emits.length
-    data = emits[0]
-    assert_equal 'flowcount', data[0] # tag
-    assert_equal 60*5, data[2]['count']
-    msgpack_size = {'f1' => 'abcde', 'f2' => 'vwxyz', 'f3' => '0123456789'}.to_msgpack.bytesize * 5 * 60
-    assert_equal msgpack_size, data[2]['bytes']
-  end
-
-  def test_emit_tagged
-    d1 = create_driver( %[
-      unit minute
-      aggregate tag
-      output_style tagged
-      tag flow
-      input_tag_remove_prefix test
-      count_keys *
-    ], 'test.tag1')
-    time = Time.parse("2012-01-02 13:14:15").to_i
-    d1.run do
-      60.times do
-        d1.emit({'message'=> 'hello'})
-      end
-    end
-    r1 = d1.instance.tagged_flush(60)
-    assert_equal 1, r1.length
-    assert_equal 'tag1', r1[0]['tag']
-    assert_equal 60, r1[0]['count']
-    assert_equal 60*15, r1[0]['bytes']
-    assert_equal 1.0, r1[0]['count_rate']
-    assert_equal 15.0, r1[0]['bytes_rate']
-  end
+#  def test_emit
+#    d1 = create_driver(CONFIG, 'test.tag1')
+#    time = Time.parse("2012-01-02 13:14:15").to_i
+#    d1.run do
+#      3600.times do
+#        d1.emit({'message'=> 'a' * 100})
+#        d1.emit({'message'=> 'b' * 100})
+#        d1.emit({'message'=> 'c' * 100})
+#      end
+#    end
+#    r1 = d1.instance.flush(3600 * 24)
+#    assert_equal 3600*3, r1['tag1_count']
+#    assert_equal 3600*3*100, r1['tag1_bytes']
+#    assert_equal (300/24.0).floor / 100.0, r1['tag1_count_rate'] # 3 * 3600 / (60 * 60 * 24) as xx.xx
+#    assert_equal (30000/24.0).floor / 100.0, r1['tag1_bytes_rate'] # 300 * 3600 / (60 * 60 * 24) xx.xx
+#
+#    d3 = create_driver( %[
+#      unit minute
+#      aggregate all
+#      tag flow
+#      count_keys f1,f2,f3
+#    ], 'test.tag1')
+#    time = Time.parse("2012-01-02 13:14:15").to_i
+#    d3.run do
+#      60.times do
+#        d3.emit({'f1'=>'1'*10, 'f2'=>'2'*20, 'f3'=>'3'*10})
+#      end
+#    end
+#    r3 = d3.instance.flush(60)
+#    assert_equal 60, r3['count']
+#    assert_equal 60*40, r3['bytes']
+#    assert_equal 1.0, r3['count_rate']
+#    assert_equal 40.0, r3['bytes_rate']
+#  end
+#
+#  def test_emit2
+#    d2 = create_driver( %[
+#      unit minute
+#      aggregate all
+#      tag  flowcount
+#      input_tag_remove_prefix test
+#      count_keys f1,f2,f3
+#    ], 'test.tag2')
+#    time = Time.now.to_i
+#    d2.run do
+#      60.times do 
+#        d2.emit({'f1' => 'abcde', 'f2' => 'vwxyz', 'f3' => '0123456789'})
+#        d2.emit({'f1' => 'abcde', 'f2' => 'vwxyz', 'f3' => '0123456789'})
+#        d2.emit({'f1' => 'abcde', 'f2' => 'vwxyz', 'f3' => '0123456789'})
+#        d2.emit({'f1' => 'abcde', 'f2' => 'vwxyz', 'f3' => '0123456789'})
+#        d2.emit({'f1' => 'abcde', 'f2' => 'vwxyz', 'f3' => '0123456789'})
+#      end
+#    end
+#    d2.instance.flush_emit(60)
+#    emits = d2.emits
+#    assert_equal 1, emits.length
+#    data = emits[0]
+#    assert_equal 'flowcount', data[0] # tag
+#    assert_equal 60*5, data[2]['count']
+#    assert_equal 60*5*20, data[2]['bytes']
+#  end
+#
+#  def test_emit3
+#    d3 = create_driver( %[
+#      unit minute
+#      aggregate all
+#      tag  flowcount
+#      input_tag_remove_prefix test
+#      count_keys *
+#    ], 'test.tag3')
+#    time = Time.now.to_i
+#    d3.run do
+#      60.times do 
+#        d3.emit({'f1' => 'abcde', 'f2' => 'vwxyz', 'f3' => '0123456789'})
+#        d3.emit({'f1' => 'abcde', 'f2' => 'vwxyz', 'f3' => '0123456789'})
+#        d3.emit({'f1' => 'abcde', 'f2' => 'vwxyz', 'f3' => '0123456789'})
+#        d3.emit({'f1' => 'abcde', 'f2' => 'vwxyz', 'f3' => '0123456789'})
+#        d3.emit({'f1' => 'abcde', 'f2' => 'vwxyz', 'f3' => '0123456789'})
+#      end
+#    end
+#    d3.instance.flush_emit(60)
+#    emits = d3.emits
+#    assert_equal 1, emits.length
+#    data = emits[0]
+#    assert_equal 'flowcount', data[0] # tag
+#    assert_equal 60*5, data[2]['count']
+#    msgpack_size = {'f1' => 'abcde', 'f2' => 'vwxyz', 'f3' => '0123456789'}.to_msgpack.bytesize * 5 * 60
+#    assert_equal msgpack_size, data[2]['bytes']
+#  end
+#
+#  def test_emit_tagged
+#    d1 = create_driver( %[
+#      unit minute
+#      aggregate tag
+#      output_style tagged
+#      tag flow
+#      input_tag_remove_prefix test
+#      count_keys *
+#    ], 'test.tag1')
+#    time = Time.parse("2012-01-02 13:14:15").to_i
+#    d1.run do
+#      60.times do
+#        d1.emit({'message'=> 'hello'})
+#      end
+#    end
+#    r1 = d1.instance.tagged_flush(60)
+#    assert_equal 1, r1.length
+#    assert_equal 'tag1', r1[0]['tag']
+#    assert_equal 60, r1[0]['count']
+#    assert_equal 60*15, r1[0]['bytes']
+#    assert_equal 1.0, r1[0]['count_rate']
+#    assert_equal 15.0, r1[0]['bytes_rate']
+#  end
 end
